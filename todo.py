@@ -284,6 +284,7 @@ def print_version():
         "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE"
     )
 
+
 def write_changes():
     # Write all changes back to the file.
     with open(datafile_location + datafile_name, "wb") as f:
@@ -418,4 +419,3 @@ if __name__ == "__main__":
         print(usage())
 
     write_changes()
-
