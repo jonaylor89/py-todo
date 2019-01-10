@@ -11,33 +11,36 @@ from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
 from configparser import ConfigParser
-from argparse import ArgumentParser
 
 """ Define config and data file locations """
-config_location = str(Path.home()) + '/.config/py-todo/'
-datafile_location = str(Path.home()) + '/.local/share/py-todo/'
+config_location = str(Path.home()) + "/.config/py-todo/"
+datafile_location = str(Path.home()) + "/.local/share/py-todo/"
 
 """ Define config and data file names """
-config_name = 'config'
-datafile_name = 'todo.dat'
+config_name = "config"
+datafile_name = "todo.dat"
 
 """ Define colors """
-index_color = '\x1b[35m{}\x1b[0m'
-date_color = '\x1b[32m{}\x1b[0m'
-due_color = '\x1b[31m{}\x1b[0m'
-today_color = '\x1b[33m{}\x1b[0m'
+index_color = "\x1b[35m{}\x1b[0m"
+date_color = "\x1b[32m{}\x1b[0m"
+due_color = "\x1b[31m{}\x1b[0m"
+today_color = "\x1b[33m{}\x1b[0m"
 
 """ Regex for removing terminal escape sequences from a string """
-esc_seq_reg = re.compile(r'\x1b[^m]*m')
+esc_seq_reg = re.compile(r"\x1b[^m]*m")
+
 
 class Weekday(IntEnum):
     """ Define Weekday constants """
+
     MONDAY = 0
     SATURDAY = 5
     SUNDAY = 6
 
+
 """ List of TodoItems, to be stored later in the datafile """
 items = []
+
 
 class TodoItem:
     """ A class definition for each todo item, which is defined with todo -a, and stored in the datafile """
@@ -61,10 +64,10 @@ class TodoItem:
             output_str = self.title + " ("
 
             # If in detail mode, annotate more explicitly (i.e. give the due weekday)
-            if config['PY-TODO'].getboolean('detail_mode', fallback=False):
+            if config["PY-TODO"].getboolean("detail_mode", fallback=False):
                 # By default, the first weekday is 'Sun' (last_weekday = Weekday.SATURDAY),
                 # Users are allowed to override it with 'Mon' (last_weekday = Weekday.SUNDAY).
-                if 'week_start_day' in config and config['week_start_day'].lower() in ['sun', 'mon'] and config['week_start_day'].lower() == 'mon':
+                if config["PY-TODO"]["week_start_day"].lower() == "mon":
                     last_weekday = Weekday.SUNDAY
                 else:
                     last_weekday = Weekday.SATURDAY
@@ -80,16 +83,19 @@ class TodoItem:
                 #     (2 - 2) / 7 = 0 ... 0
                 #
                 # Therefore, we have to apply ceiling function to weeks_left
-                # in order to distinguish between current week and next week. 
+                # in order to distinguish between current week and next week.
                 days_to_next_week = last_weekday - datetime.today().weekday()
-                weeks_left = ceil((days_left - days_to_next_week) / 7) # There are 7 days in a week.
+                weeks_left = ceil(
+                    (days_left - days_to_next_week) / 7
+                )  # There are 7 days in a week.
 
                 # weeks_left == 0 iff this week;
                 # weeks_left == 1 iff next week.
                 if weeks_left == 0 or weeks_left == 1:
                     output_str += "{this_or_next} {weekday}; ".format(
                         this_or_next="This" if weeks_left == 0 else "Next",
-                        weekday=self.exp_date.strftime("%A"))
+                        weekday=self.exp_date.strftime("%A"),
+                    )
             return output_str + "{days_left} days left)".format(days_left=days_left)
         else:
             return self.title + " (DUE!)"
@@ -107,8 +113,8 @@ def maybe_color_str(message, color_fstr, predicate=lambda: True):
     :param color_fstr: The color format string
     :param predicate: A function deciding whether the message should be colored, alongside the config file
     :return: A colored string if the config indicated color """
-    if config['PY-TODO'].getboolean('color', fallback=False):
-        stripped_message = esc_seq_reg.sub('', message)
+    if config["PY-TODO"].getboolean("color", fallback=False):
+        stripped_message = esc_seq_reg.sub("", message)
         return color_fstr.format(stripped_message) if predicate() else message
 
     return message
@@ -136,8 +142,11 @@ def remove_item(indices: list):
 def list_items():
     """ Iterate through each TodoItem in the items list and print it """
     if len(items) > 0:
-        print("You have {item_count} item{s} left on the reminder!".format(
-            item_count=len(items), s="s" if len(items) >= 2 else ""))
+        print(
+            "You have {item_count} item{s} left on the reminder!".format(
+                item_count=len(items), s="s" if len(items) >= 2 else ""
+            )
+        )
 
         for index, item in enumerate(items):
             item_str = str(item)
@@ -145,13 +154,21 @@ def list_items():
 
             maybe_colored_index = maybe_color_str(index + ") ", index_color)
 
-            if '(' in item_str:
-                date = item_str[item_str.index('('):]  # Slice of str from the first occurrence of "(" (inclusive)
+            if "(" in item_str:
+                date = item_str[
+                    item_str.index("(") :
+                ]  # Slice of str from the first occurrence of "(" (inclusive)
 
                 # The date could possibly be either color, so no harm in calling maybe_color_str multiple times
-                date = maybe_color_str(date, due_color, lambda: True if "DUE" in date else False)
-                date = maybe_color_str(date, date_color, lambda: True if "DUE" not in date else False)
-                date = maybe_color_str(date, today_color, lambda: True if "Today" in date else False)
+                date = maybe_color_str(
+                    date, due_color, lambda: True if "DUE" in date else False
+                )
+                date = maybe_color_str(
+                    date, date_color, lambda: True if "DUE" not in date else False
+                )
+                date = maybe_color_str(
+                    date, today_color, lambda: True if "Today" in date else False
+                )
 
                 print(maybe_colored_index + item.title + " " + date)
             else:
@@ -166,13 +183,13 @@ def parse_date_str(exp_date_str):
     :return: a valid datetime object
     """
     try:
-        if exp_date_str == '':
+        if exp_date_str == "":
             return None
-        elif exp_date_str.endswith('d'):
-            day_count = int( exp_date_str.split('d')[0] )
+        elif exp_date_str.endswith("d"):
+            day_count = int(exp_date_str.split("d")[0])
             return datetime.today() + timedelta(days=day_count)
         else:
-            return datetime(*map(int, exp_date_str.split('/')))
+            return datetime(*map(int, exp_date_str.split("/")))
     except:
         print("An error occurred while parsing your date.")
         sys.exit()
@@ -186,11 +203,19 @@ def take_input(title_pos, date_pos, default_title=None):
     :return: a tuple containing the title and date
     """
     if default_title:
-        title = sys.argv[title_pos] if len(sys.argv) > title_pos else input("Title ({default_title}): ".format(default_title=default_title))
+        title = (
+            sys.argv[title_pos]
+            if len(sys.argv) > title_pos
+            else input("Title ({default_title}): ".format(default_title=default_title))
+        )
     else:
         title = sys.argv[title_pos] if len(sys.argv) > title_pos else input("Title: ")
 
-    exp_date_str = sys.argv[date_pos] if len(sys.argv) > date_pos else input("Expiry date (YYYY/MM/DD or <days>d) (Optional): ")
+    exp_date_str = (
+        sys.argv[date_pos]
+        if len(sys.argv) > date_pos
+        else input("Expiry date (YYYY/MM/DD or <days>d) (Optional): ")
+    )
 
     return title if title else default_title, exp_date_str
 
@@ -201,9 +226,9 @@ def scrape_keywords(line):
     :returns: A (possibly empty) list of keywords
     """
     keywords = []
-    todos = line.replace('#+TODO: ', '')
+    todos = line.replace("#+TODO: ", "")
     for word in todos.split():
-        if word != '|':
+        if word != "|":
             keywords.append(word)
     return keywords
 
@@ -214,7 +239,7 @@ def strip_line(line, word):
     :param word: The keyword to strip from the line
     :returns: A stripped line
     """
-    return line.strip('*').replace(word, '').strip()
+    return line.strip("*").replace(word, "").strip()
 
 
 def scrape_date(line):
@@ -222,42 +247,45 @@ def scrape_date(line):
     :param line: A line containgin a date
     :returns: A datetime object
     """
-    date = line.split('<')[1]
-    match = re.search(r'\d{4}-\d{2}-\d{2}', date)
+    date = line.split("<")[1]
+    match = re.search(r"\d{4}-\d{2}-\d{2}", date)
     date = match.group(0)
-    date = datetime(*map(int, date.split('-')))
+    date = datetime(*map(int, date.split("-")))
     return date
 
 
 def usage():
-    return "\nUsage: " + sys.argv[0] + " <argument>\n" \
-          "-a --add                                  -- Add a new item.\n" \
-          "-a --add <title> <date or days>           -- Add a new item with a title and expiry date provided.\n" \
-          "-e --edit <index>                         -- Edit an item.\n" \
-          "-e --edit <index> <title> <date or days>  -- Edit an item with a title and expiry date provided.\n" \
-          "-m --move <index> <new index>             -- Move an item from index to new index.\n" \
-          "-r --remove <indices...>                  -- Remove items by their indices.\n" \
-          "-l --list                                 -- List all items.\n" \
-          "-org --orgfile <filename>                 -- Add org file TODOs.\n" \
-          "\n" \
-          "-h --help                                 -- Display help message.\n" \
-          "-v --version                              -- Display version info.\n" \
-          "\n\n" \
-          "Configuration Options (See " + config_location + config_name + "):\n" \
-          "* color = true / false\n" \
-          "* detail_mode = true / false\n" \
+    return (
+        "\nUsage: " + sys.argv[0] + " <argument>\n"
+        "-a --add                                  -- Add a new item.\n"
+        "-a --add <title> <date or days>           -- Add a new item with a title and expiry date provided.\n"
+        "-e --edit <index>                         -- Edit an item.\n"
+        "-e --edit <index> <title> <date or days>  -- Edit an item with a title and expiry date provided.\n"
+        "-m --move <index> <new index>             -- Move an item from index to new index.\n"
+        "-r --remove <indices...>                  -- Remove items by their indices.\n"
+        "-l --list                                 -- List all items.\n"
+        "-org --orgfile <filename>                 -- Add org file TODOs.\n"
+        "\n"
+        "-h --help                                 -- Display help message.\n"
+        "-v --version                              -- Display version info.\n"
+        "\n\n"
+        "Configuration Options (See " + config_location + config_name + "):\n"
+        "* color = true / false\n"
+        "* detail_mode = true / false\n"
+    )
 
 
 def print_version():
-    print("py-todo 1.3.3\n"
-          "Copyright (C) 2018 Marco Wang\n"
-          "\n"
-          "This is free software, see the source for copying conditions.  There is NO\n"
-          "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE")
+    print(
+        "py-todo 1.3.3\n"
+        "Copyright (C) 2018 Marco Wang\n"
+        "\n"
+        "This is free software, see the source for copying conditions.  There is NO\n"
+        "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE"
+    )
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     # mkdir -p on config_location and datafile_location.
     Path(config_location).mkdir(parents=True, exist_ok=True)
     Path(datafile_location).mkdir(parents=True, exist_ok=True)
@@ -266,22 +294,19 @@ if __name__ == '__main__':
     config = ConfigParser()
 
     # Default configuration
-    config['PY-TODO'] = {
-        'color': False,
-        'detail_mode': False
-    }
+    config["PY-TODO"] = {"color": False, "detail_mode": False, "week_start_day": "Sun"}
 
     if not os.path.isfile(os.path.join(config_location, config_name)):
 
         # If a config file doesn't exist, write the default one
-        with open(os.path.join(config_location, config_name), 'w+') as configfile:
+        with open(os.path.join(config_location, config_name), "w+") as configfile:
             config.write(configfile)
     else:
         config.read(os.path.join(config_location, config_name))
- 
+
     # Try to unpickle todo list from the file.
     try:
-        with open(datafile_location + datafile_name, 'rb') as f:
+        with open(datafile_location + datafile_name, "rb") as f:
             items = pickle.load(f)
     except:
         pass
@@ -290,10 +315,10 @@ if __name__ == '__main__':
     if len(sys.argv) <= 1:
         list_items()
 
-    elif sys.argv[1] in ['-l', '--list']:
+    elif sys.argv[1] in ["-l", "--list"]:
         list_items()
 
-    elif sys.argv[1] in ['-a', '--add']:
+    elif sys.argv[1] in ["-a", "--add"]:
         try:
             title, exp_date_str = take_input(2, 3)
 
@@ -306,7 +331,7 @@ if __name__ == '__main__':
             list_items()
             sys.exit(1)
 
-    elif sys.argv[1] in ['-r', '--remove']:
+    elif sys.argv[1] in ["-r", "--remove"]:
         if len(sys.argv) >= 3:
             try:
                 indices = list(map(int, sys.argv[2:]))
@@ -317,7 +342,7 @@ if __name__ == '__main__':
         else:
             print(usage())
 
-    elif sys.argv[1] in ['-e', '--edit']:
+    elif sys.argv[1] in ["-e", "--edit"]:
         if len(sys.argv) >= 3:
             try:
                 item = items[int(sys.argv[2])]
@@ -353,11 +378,11 @@ if __name__ == '__main__':
         else:
             print(usage())
 
-    elif sys.argv[1] in ['-org', '--orgfile']:
+    elif sys.argv[1] in ["-org", "--orgfile"]:
         keywords = []
         filename = str(sys.argv[2])
         # Open the orgfile
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             content = f.readlines()
 
         for index, line in enumerate(content):
@@ -366,14 +391,14 @@ if __name__ == '__main__':
                 keywords.extend(scrape_keywords(line))
             else:
                 if not keywords:
-                    keywords.append('TODO')
-                    keywords.append('DONE')
+                    keywords.append("TODO")
+                    keywords.append("DONE")
                 for word in keywords:
                     # Search in each line and format if match
-                    if word in line and '*' in line:
+                    if word in line and "*" in line:
                         title = strip_line(line, word)
                         try:
-                            if ': <' in content[index + 1]:
+                            if ": <" in content[index + 1]:
                                 add_item(title, scrape_date(content[index + 1]))
                             else:
                                 add_item(title, None)
@@ -381,12 +406,12 @@ if __name__ == '__main__':
                             add_item(title, None)
         list_items()
 
-    elif sys.argv[1] in ['-v', '--version']:
+    elif sys.argv[1] in ["-v", "--version"]:
         print_version()
 
     else:
         print(usage())
 
     # Write all changes back to the file.
-    with open(datafile_location + datafile_name, 'wb') as f:
+    with open(datafile_location + datafile_name, "wb") as f:
         pickle.dump(items, f)
