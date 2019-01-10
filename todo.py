@@ -284,6 +284,11 @@ def print_version():
         "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE"
     )
 
+def write_changes():
+    # Write all changes back to the file.
+    with open(datafile_location + datafile_name, "wb") as f:
+        pickle.dump(items, f)
+
 
 if __name__ == "__main__":
     # mkdir -p on config_location and datafile_location.
@@ -412,6 +417,5 @@ if __name__ == "__main__":
     else:
         print(usage())
 
-    # Write all changes back to the file.
-    with open(datafile_location + datafile_name, "wb") as f:
-        pickle.dump(items, f)
+    write_changes()
+
