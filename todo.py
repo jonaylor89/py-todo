@@ -11,7 +11,6 @@ from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
 from configparser import ConfigParser
-from argparse import ArgumentParser
 
 """ Define config and data file locations """
 config_location = str(Path.home()) + '/.config/py-todo/'
