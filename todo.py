@@ -294,15 +294,11 @@ if __name__ == "__main__":
     config = ConfigParser()
 
     # Default configuration
-<<<<<<< HEAD
-    config["PY-TODO"] = {"color": False, "detail_mode": False, "week_start_day": "Sun"}
-=======
     config['PY-TODO'] = {
         'color': False,
         'detail_mode': False,
         'week_start_day': 'Sun'
     }
->>>>>>> 2def5d24ab2bb4ab384599a9f9708b74cb89ae79
 
     if not os.path.isfile(os.path.join(config_location, config_name)):
 
