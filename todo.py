@@ -21,10 +21,10 @@ config_name = "config"
 datafile_name = "todo.dat"
 
 """ Define colors """
-index_color = '\x1b[34m{}\x1b[0m'
-date_color = '\x1b[32m{}\x1b[0m'
-due_color = '\x1b[31m{}\x1b[0m'
-today_color = '\x1b[33m{}\x1b[0m'
+index_color = "\x1b[34m{}\x1b[0m"
+date_color = "\x1b[32m{}\x1b[0m"
+due_color = "\x1b[31m{}\x1b[0m"
+today_color = "\x1b[33m{}\x1b[0m"
 
 """ Regex for removing terminal escape sequences from a string """
 esc_seq_reg = re.compile(r"\x1b[^m]*m")
@@ -294,11 +294,7 @@ if __name__ == "__main__":
     config = ConfigParser()
 
     # Default configuration
-    config['PY-TODO'] = {
-        'color': False,
-        'detail_mode': False,
-        'week_start_day': 'Sun'
-    }
+    config["PY-TODO"] = {"color": False, "detail_mode": False, "week_start_day": "Sun"}
 
     if not os.path.isfile(os.path.join(config_location, config_name)):
 
