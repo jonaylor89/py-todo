@@ -2,15 +2,14 @@
 # -*- encoding: utf-8 -*-
 
 import os
-import sys
 import pickle
 import re
-from math import ceil
-from enum import IntEnum
-from pathlib import Path
-from datetime import datetime
-from datetime import timedelta
+import sys
 from configparser import ConfigParser
+from datetime import datetime, timedelta
+from enum import IntEnum
+from math import ceil
+from pathlib import Path
 
 """ Define config and data file locations """
 config_location = str(Path.home()) + "/.config/py-todo/"
